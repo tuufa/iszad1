@@ -143,11 +143,17 @@
 
 		function IsRgbColor(color) {
 			const parts = ExtractArguments(color);
-			if (!parts || parts.length !== 3 && parts.length !== 4) return false;
+			if (!parts || (parts.length !== 3 && parts.length !== 4)) return false;
 
-			for (let i = 0; i < 3; i++) {
-				const val = parts[i];
-				if (val.endsWith('%')) 
+			const isPercent = parts.slice(0, 3).every(val => val.trim().endsWith('%'));
+			const isNumber = parts.slice(0, 3).every(val => !val.trim().endsWith('%'));
+
+			if (!isPercent && !isNumber) return false;
+
+			for (let i = 0; i < 3; i++) 
+			{
+				const val = parts[i].trim();
+				if (isPercent)
 				{
 					const n = parseFloat(val);
 					if (isNaN(n) || n < 0 || n > 100) return false;
@@ -167,6 +173,7 @@
 
 			return true;
 		}
+
 
 		function IsHslColor(color) {
 			const parts = ExtractArguments(color);
