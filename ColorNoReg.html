@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проверка web-цвета</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        input {
+            padding: 8px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .valid {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .invalid {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        .color-preview {
+            width: 100px;
+            height: 100px;
+            border: 1px solid #ccc;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Проверка корректности web-цвета</h1>
+        
+        <div class="input-group">
+            <label for="ColorInput">Введите цвет в формате HEX, RGB или HSL:</label>
+            <input type="text" id="ColorInput" placeholder="Например: #ff0000 или rgb(255, 0, 0)">
+            <button onclick="CheckColor()">Проверить</button>
+            <div id="result" class="result" style="display: none;"></div>
+            <div id="ColorPreview" class="color-preview"></div>
+        </div>
+        
+        <div>
+            <h3>Примеры корректных цветов:</h3>
+            <ul>
+                <li>#21148D</li>
+                <li>#888</li>
+                <li>rgb(255, 255, 255)</li>
+                <li>rgb(10%, 20%, 0%)</li>
+                <li>hsl(200, 100%, 50%)</li>
+                <li>hsl(0, 0%, 0%)</li>
+            </ul>
+            
+            <h3>Примеры некорректных цветов:</h3>
+            <ul>
+                <li>#2345</li>
+                <li>fffff</li>
+                <li>rgb(257, 50, 10)</li>
+                <li>hsl(20, 10, 0.5)</li>
+                <li>hsl(34%, 20%, 50%)</li>
+            </ul>
+        </div>
+    </div>
+	<script>
+	
+		function CheckColor() {
+			const ColorInput = document.getElementById('ColorInput').value.trim();
+			const ResultDiv = document.getElementById('result');
+			const ColorPreview = document.getElementById('ColorPreview');
+			
+			ResultDiv.style.display = 'block';
+
+			if (isValidColor(ColorInput)) 
+			{
+				ResultDiv.textContent = "Цвет корректен!";
+				ResultDiv.className = "result valid";
+				ColorPreview.style.backgroundColor = ColorInput;
+			} 
+			else 
+			{
+				ResultDiv.textContent = "Цвет некорректен!";
+				ResultDiv.className = "result invalid";
+				ColorPreview.style.backgroundColor = "transparent";
+			}
+		}
+
+		function isColor(color) {
+			if (!color) return false;
+
+			if (color.startsWith('#')) return IsHexColor(color);
+			
+			const name = color.toLowerCase().split('(')[0];
+			if (color.endsWith(')')) 
+			{
+				if (name === 'rgb' || name === 'rgba') return IsRgbColor(color);
+				if (name === 'hsl' || name === 'hsla') return IsHslColor(color);
+			}
+
+			return false;
+		}
+
+		function IsHexColor(color) {
+			const hex = color.slice(1);
+			if (hex.length !== 3 && hex.length !== 6) return false;
+
+			for (let i = 0; i < hex.length; i++) 
+			{
+				const ch = hex[i];
+				if (!((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F'))) {return false;}
+			}
+
+			return true;
+		}
+
+		function IsRgbColor(color) {
+			const parts = ExtractArguments(color);
+			if (!parts || parts.length !== 3 && parts.length !== 4) return false;
+
+			for (let i = 0; i < 3; i++) {
+				const val = parts[i];
+				if (val.endsWith('%')) 
+				{
+					const n = parseFloat(val);
+					if (isNaN(n) || n < 0 || n > 100) return false;
+				} 
+				else 
+				{
+					const n = parseInt(val);
+					if (isNaN(n) || n < 0 || n > 255) return false;
+				}
+			}
+
+			if (parts.length === 4)
+			{
+				const alpha = parseFloat(parts[3]);
+				if (isNaN(alpha) || alpha < 0 || alpha > 1) return false;
+			}
+
+			return true;
+		}
+
+		function IsHslColor(color) {
+			const parts = ExtractArguments(color);
+			if (!parts || (parts.length !== 3 && parts.length !== 4)) return false;
+
+			const hueRaw = parts[0];
+			if (hueRaw.endsWith('%')) return false; 
+			const hue = parseFloat(hueRaw);
+			if (isNaN(hue) || hue < 0 || hue > 360) return false;
+
+			for (let i = 1; i <= 2; i++) 
+			{
+				const val = parts[i];
+				if (!val.endsWith('%')) return false;
+				const n = parseFloat(val);
+				if (isNaN(n) || n < 0 || n > 100) return false;
+			}
+
+			if (parts.length === 4) 
+			{
+				const alpha = parseFloat(parts[3]);
+				if (isNaN(alpha) || alpha < 0 || alpha > 1) return false;
+			}
+
+			return true;
+		}
+
+
+		function ExtractArguments(str) {
+			const start = str.indexOf('(');
+			const end = str.lastIndexOf(')');
+			if (start === -1 || end === -1 || start > end) return null;
+
+			const inner = str.slice(start + 1, end);
+			const rawParts = inner.split(',').map(p => p.trim());
+			return rawParts;
+		}
+	
+	</script>
+
+</body>
+</html>

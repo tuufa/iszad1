@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Токенизация математического выражения</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            min-height: 100px;
+            font-family: monospace;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .token-type {
+            font-weight: bold;
+        }
+        .variable {
+            color: #007bff;
+        }
+        .number {
+            color: #28a745;
+        }
+        .constant {
+            color: #6f42c1;
+        }
+        .function {
+            color: #fd7e14;
+        }
+        .operator {
+            color: #dc3545;
+        }
+        .parenthesis {
+            color: #6c757d;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Токенизация математического выражения</h1>
+        
+        <div class="input-group">
+            <label for="expression">Введите математическое выражение:</label>
+            <textarea id="expression" placeholder="Например: sin(x) + cos(y) * 2.5"></textarea>
+        </div>
+        
+        <button id="tokenize-btn">Токенизировать</button>
+        
+        <div class="result" id="result" style="display: none;">
+            <h3>Результат токенизации:</h3>
+            <div id="tokens-table"></div>
+        </div>
+        
+        <div class="requirements">
+            <h3>Поддерживаемые элементы:</h3>
+            <ul>
+                <li><span class="token-type variable">Переменная</span> - строка из латинских букв, цифр и _, начинающаяся не с цифры</li>
+                <li><span class="token-type number">Число</span> - целое или вещественное число (например: 42, 23.567)</li>
+                <li><span class="token-type constant">Константа</span> - pi, e, sqrt2, ln2, ln10</li>
+                <li><span class="token-type function">Функция</span> - sin, cos, tg, ctg, tan, cot, sinh, cosh, th, cth, tanh, coth, ln, lg, log, exp, sqrt, cbrt, abs, sign</li>
+                <li><span class="token-type operator">Операция</span> - ^, *, /, -, +</li>
+                <li><span class="token-type parenthesis">Скобки</span> - ( и )</li>
+            </ul>
+        </div>
+    </div>
+
+<script>
+    document.getElementById('tokenize-btn').addEventListener('click', tokenizeExpression);
+
+    function tokenizeExpression() 
+	{
+        const expression = document.getElementById('expression').value;
+        const resultDiv = document.getElementById('result');
+        const tokensTable = document.getElementById('tokens-table');
+
+        tokensTable.innerHTML = '';
+        resultDiv.style.display = 'none';
+
+        if (!expression.trim()) 
+		{
+            showError("Пожалуйста, введите математическое выражение");
+            return;
+        }
+
+        const tokenPatterns = 
+		[
+            { type: "whitespace", regex: /\s+/y, ignore: true },
+            { type: "function", regex: /\b(sin|cos|tg|ctg|tan|cot|sinh|cosh|th|cth|tanh|coth|ln|lg|log|exp|sqrt|cbrt|abs|sign)\b/y, class: "function" },
+            { type: "constant", regex: /\b(pi|e|sqrt2|ln2|ln10)\b/y, class: "constant" },
+            { type: "number", regex: /\d+(\.\d+)?/y, class: "number" },
+            { type: "operator", regex: /[\^*/+\-]/y, class: "operator" },
+            { type: "left_parenthesis",  regex: /\(/y, class: "parenthesis" },
+            { type: "right_parenthesis", regex: /\)/y,  class: "parenthesis" },
+            { type: "variable", regex: /[a-zA-Z_][a-zA-Z0-9_]*/y,  class: "variable" }
+        ];
+
+        let tokens = [];
+        let currentIndex = 0;
+        const length = expression.length;
+
+        while (currentIndex < length) 
+		{
+            let matchFound = false;
+
+            for (const pattern of tokenPatterns) 
+			{
+                pattern.regex.lastIndex = currentIndex;
+                const match = pattern.regex.exec(expression);
+
+                if (match)
+				{
+                    if (pattern.ignore)
+					{
+                        currentIndex = pattern.regex.lastIndex;
+                        matchFound = true;
+                        break;
+                    }
+
+                    const start = currentIndex;
+                    const end = pattern.regex.lastIndex;
+                    const value = match[0];
+
+                    tokens.push(
+					{
+                        type: pattern.type,
+                        value: value,
+                        class: pattern.class,
+                        span: [start, end]
+                    });
+
+                    currentIndex = end;
+                    matchFound = true;
+                    break;
+                }
+            }
+
+            if (!matchFound) 
+			{
+                showError(`Ошибка: нераспознанный символ "${expression[currentIndex]}" на позиции ${currentIndex}`);
+                return;
+            }
+        }
+
+        if (tokens.length === 0) 
+		{
+            showError("Не удалось распознать ни одного токена в выражении");
+            return;
+        }
+
+        let tableHTML = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>Токен</th>
+                        <th>Тип</th>
+                        <th>Расположение</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        for (const token of tokens) 
+		{
+            tableHTML += `
+                <tr>
+                    <td><span class="${token.class}">${escapeHtml(token.value)}</span></td>
+                    <td>${token.type}</td>
+                    <td>[${token.span[0]}, ${token.span[1]}]</td>
+                </tr>
+            `;
+        }
+
+        tableHTML += `
+                </tbody>
+            </table>
+        `;
+
+        tokensTable.innerHTML = tableHTML;
+        resultDiv.style.display = "block";
+    }
+
+
+    function showError(message) 
+	{
+        document.getElementById('tokens-table').innerHTML = `<p class="error">${message}</p>`;
+        document.getElementById('result').style.display = "block";
+    }
+
+    function escapeHtml(unsafe) 
+	{
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+</script>
+
+</body>
+</html>

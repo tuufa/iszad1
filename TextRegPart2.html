@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выделение предложений в тексте</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .input-section, .output-section {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 200px;
+            font-family: inherit;
+            resize: vertical;
+            font-size: 16px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #highlightedText {
+            white-space: pre-wrap;
+            padding: 15px;
+            background-color: white;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <h1>Выделение предложений в тексте</h1>
+    
+    <div class="container">
+        <div class="input-section">
+            <h2>Исходный текст</h2>
+            <textarea id="textInput" placeholder="Введите текст..."></textarea>
+            <button onclick="highlightSentences()">Выделить предложения</button>
+            <button onclick="clearHighlighting()">Очистить</button>
+        </div>
+        
+        <div class="output-section">
+            <h2>Текст с выделенными предложениями</h2>
+            <div id="highlightedText"></div>
+        </div>
+    </div>
+
+    <script>
+        function getRandomColor() {
+			const colors = [
+				'rgba(231, 76, 60, 0.3)',    
+				'rgba(46, 204, 113, 0.3)',   
+				'rgba(52, 152, 219, 0.3)',   
+				'rgba(241, 196, 15, 0.3)',   
+				'rgba(155, 89, 182, 0.3)',   
+				'rgba(26, 188, 156, 0.3)',   
+				'rgba(230, 126, 34, 0.3)',   
+				'rgba(189, 195, 199, 0.3)',  
+				'rgba(149, 165, 166, 0.3)',  
+				'rgba(243, 156, 18, 0.3)',   
+				'rgba(22, 160, 133, 0.3)',   
+				'rgba(39, 174, 96, 0.3)',    
+				'rgba(41, 128, 185, 0.3)',   
+				'rgba(142, 68, 173, 0.3)',   
+				'rgba(44, 62, 80, 0.3)',     
+				'rgba(211, 84, 0, 0.3)',     
+				'rgba(192, 57, 43, 0.3)',    
+				'rgba(127, 140, 141, 0.3)',  
+				'rgba(52, 73, 94, 0.3)',     
+				'rgba(253, 227, 167, 0.3)', 
+				'rgba(174, 214, 241, 0.3)',  
+				'rgba(255, 121, 121, 0.3)',  
+				'rgba(186, 220, 88, 0.3)',   
+				'rgba(249, 202, 36, 0.3)',  
+				'rgba(153, 128, 250, 0.3)'   
+			];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+		function highlightSentences() 
+		{
+			const text = document.getElementById('textInput').value.trim();
+			const output = document.getElementById('highlightedText');
+
+			if (!text)
+			{
+				output.innerHTML = '<em>Пожалуйста, введите текст</em>';
+				return;
+			}
+			const abbreviations = [
+				'г\\.', 'ул\\.', 'д\\.', 'т\\.е\\.', 'и\\.т\\.д\\.', 'и\\.т\\.п\\.', 'т\\.к\\.', 'т\\.н\\.', 'т\\.о\\.',
+				'т\\.ч\\.', 'н\\.э\\.', 'до н\\.э\\.', 'напр\\.', 'см\\.', 'рис\\.', 'табл\\.', 'прим\\.', 'т\\.д\\.',
+				'т\\.п\\.', 'vs\\.', 'т\\.е\\.', 'и\\.др\\.', 'и пр\\.', 'и т\\.д\\.', 'и т\\.п\\.', '\\d+\\.' 
+			];
+
+			const abbrevPattern = abbreviations.join('|');
+
+			const sentenceRegex = new RegExp(`(?<!${abbrevPattern})(?<=\\S[^.!?\\n]{2,}[.!?])(?=\\s|\\n|$)`, 'g');
+
+			const sentences = text.split(sentenceRegex);
+
+			let highlighted = sentences.map(sentence => { return `<span style="background-color: ${getRandomColor()}; padding: 2px 4px; border-radius: 3px;">${sentence.trim()}</span>`; }).join(' ');
+			output.innerHTML = highlighted.replace(/\n/g, '<br>');
+		}
+
+    </script>
+</body>
+</html>

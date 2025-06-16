@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проверка скобочных выражений</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 100px;
+            font-family: monospace;
+            margin-bottom: 15px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .valid {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .invalid {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .examples {
+            margin-top: 30px;
+        }
+        .examples h3 {
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Проверка корректности скобочного выражения</h1>
+    
+    <div class="container">
+        <p>Введите скобочное выражение для проверки (допустимые скобки: (), {}, []):</p>
+        <textarea id="bracketInput" placeholder="Введите выражение, например: {[()]}"></textarea>
+        <button onclick="validateBrackets()">Проверить</button>
+        
+        <div id="result"></div>
+    </div>
+    
+    <div class="examples">
+        <h3>Примеры корректных выражений</h3>
+        <table>
+            <tr><td>()</td></tr>
+            <tr><td>{[]}</td></tr>
+            <tr><td>{[({()})]}</td></tr>
+            <tr><td>({}[()])</td></tr>
+        </table>
+        
+        <h3>Примеры некорректных выражений</h3>
+        <table>
+            <tr><td>)</td></tr>
+            <tr><td>{X[]}</td></tr>
+            <tr><td>{[[{]]}{(X]}</td></tr>
+            <tr><td>([)]</td></tr>
+        </table>
+    </div>
+
+    <script>
+        function validateBrackets() {
+            const input = document.getElementById('bracketInput').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (input === '') {
+                resultDiv.textContent = 'Введена пустая строка. Пустая строка считается корректной.';
+                resultDiv.className = 'valid';
+                resultDiv.style.display = 'block';
+                return;
+            }
+            
+            // Удаляем все символы, кроме скобок
+            const cleanedInput = input.replace(/[^(){}[\]]/g, '');
+            
+            // Проверяем, остались ли только скобки
+            if (cleanedInput.length !== input.length) {
+                resultDiv.textContent = 'Ошибка: В строке присутствуют символы, отличные от скобок (), {}, [].';
+                resultDiv.className = 'invalid';
+                resultDiv.style.display = 'block';
+                return;
+            }
+            
+            // Проверяем корректность скобочного выражения
+            if (isValidBracketExpression(cleanedInput)) {
+                resultDiv.textContent = 'Выражение корректно!';
+                resultDiv.className = 'valid';
+            } else {
+                resultDiv.textContent = 'Выражение некорректно!';
+                resultDiv.className = 'invalid';
+            }
+            
+            resultDiv.style.display = 'block';
+        }
+        
+        function isValidBracketExpression(str) {
+            const stack = [];
+            const bracketPairs = {
+                ')': '(',
+                '}': '{',
+                ']': '['
+            };
+            
+            for (let char of str) {
+                if (['(', '{', '['].includes(char)) {
+                    stack.push(char);
+                } else {
+                    if (stack.length === 0 || stack.pop() !== bracketPairs[char]) {
+                        return false;
+                    }
+                }
+            }
+            
+            return stack.length === 0;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проверка корректности даты</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        input {
+            padding: 8px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .valid {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .invalid {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        .examples {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .example-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .example-list li {
+            padding: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Проверка корректности даты</h1>
+        
+        <div class="input-group">
+            <label for="dateInput">Введите дату в одном из поддерживаемых форматов:</label>
+            <input type="text" id="dateInput" placeholder="Например: 14.09.2023 или 20 января 1806">
+            <button onclick="checkDate()">Проверить</button>
+            <div id="result" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="examples">
+            <div>
+                <h3>Примеры корректных дат:</h3>
+                <ul class="example-list">
+                    <li>14.09.2023</li>
+                    <li>5/02/1995</li>
+                    <li>01-4-2012</li>
+                    <li>2023.09.14</li>
+                    <li>1995/02/5</li>
+                    <li>2012-4-01</li>
+                    <li>14 сентября 2023</li>
+                    <li>5 февраля 1995</li>
+                    <li>September 14, 2023</li>
+                    <li>Feb 5, 1995</li>
+                    <li>2023, September 14</li>
+                    <li>1995, Feb 5</li>
+                </ul>
+            </div>
+            
+            <div>
+                <h3>Примеры некорректных дат:</h3>
+                <ul class="example-list">
+                    <li>25.08-1002</li>
+                    <li>декабря 19, 1838</li>
+                    <li>8.20.1973</li>
+                    <li>Jun 7, -1563</li>
+                    <li>31.02.2020</li>
+                    <li>2023/13/01</li>
+                    <li>2023-00-15</li>
+                    <li>32 января 2023</li>
+                    <li>February 30, 2023</li>
+                    <li>2023, Septembr 14</li>
+                    <li>1995, Fb 5</li>
+                    <li>0.0.0</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Месяцы на русском (полные и сокращенные)
+        const russianMonths = [
+            'январь', 'января', 'февраль', 'февраля', 'март', 'марта',
+            'апрель', 'апреля', 'май', 'мая', 'июнь', 'июня',
+            'июль', 'июля', 'август', 'августа', 'сентябрь', 'сентября',
+            'октябрь', 'октября', 'ноябрь', 'ноября', 'декабрь', 'декабря'
+        ];
+
+        // Месяцы на английском (полные и сокращенные)
+        const englishMonths = [
+            'january', 'february', 'march', 'april', 'may', 'june',
+            'july', 'august', 'september', 'october', 'november', 'december',
+            'jan', 'feb', 'mar', 'apr', 'may', 'jun',
+            'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
+        ];
+
+        function checkDate() 
+		{
+            const dateInput = document.getElementById('dateInput').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.style.display = 'block';
+            
+            if (isValidDate(dateInput)) 
+			{
+                resultDiv.textContent = "Дата корректна!";
+                resultDiv.className = "result valid";
+            } else 
+			{
+                resultDiv.textContent = "Дата некорректна!";
+                resultDiv.className = "result invalid";
+            }
+        }
+        
+        function isValidDate(dateStr) 
+		{
+			if (!dateStr) return false;
+
+			// Заменяем запятую без пробела на запятую с пробелом (вручную)
+			let norma = '';
+			for (let i = 0; i < dateStr.length; i++) 
+			{
+				const char = dateStr[i];
+				if (char === ',' && i + 1 < dateStr.length && dateStr[i + 1] !== ' ')
+				{
+					normal += ', ';
+				} else
+				{
+					normal += char;
+				}
+			}
+			dateStr = normal.trim();
+            
+            // Пробуем разные форматы по очереди
+            return (
+                checkFormatDMY(dateStr) ||
+                checkFormatYMD(dateStr) ||
+                checkFormatRussian(dateStr) ||
+                checkFormatEnglish(dateStr) ||
+                checkFormatEnglishWithComma(dateStr) ||
+                checkFormatEnglishShortWithComma(dateStr) ||
+                checkFormatEnglishYearFirst(dateStr) ||
+                checkFormatEnglishShortYearFirst(dateStr)
+            );
+        }
+        
+        function checkFormatDMY(dateStr) 
+		{
+            const separators = ['.', '/', '-'];
+            
+            for (const sep of separators) 
+			{
+                if (dateStr.includes(sep))
+				{
+                    const parts = dateStr.split(sep);
+                    if (parts.length === 3) 
+					{
+                        const day = parseInt(parts[0], 10);
+                        const month = parseInt(parts[1], 10);
+                        const year = parseInt(parts[2], 10);
+                        
+                        if (!isNaN(day) && !isNaN(month) && !isNaN(year) && year >= 0) 
+						{
+                            return isValidDayMonthYear(day, month, year);
+                        }
+                    }
+                }
+            }
+            
+            return false;
+        }
+        
+        function checkFormatYMD(dateStr) 
+		{
+            const separators = ['.', '/', '-'];
+            
+            for (const sep of separators) 
+			{
+                if (dateStr.includes(sep))
+				{
+                    const parts = dateStr.split(sep);
+                    if (parts.length === 3)
+					{
+                        const year = parseInt(parts[0], 10);
+                        const month = parseInt(parts[1], 10);
+                        const day = parseInt(parts[2], 10);
+                        
+                        if (!isNaN(day) && !isNaN(month) && !isNaN(year) && year >= 0)
+						{
+                            return isValidDayMonthYear(day, month, year);
+                        }
+                    }
+                }
+            }
+            
+            return false;
+        }
+        
+        function checkFormatRussian(dateStr)
+		{
+            const parts = dateStr.split(' ');
+            if (parts.length !== 3) return false;
+            
+            const day = parseInt(parts[0], 10);
+            if (isNaN(day)) return false;
+            
+            const monthStr = parts[1].toLowerCase();
+            const monthIndex = russianMonths.indexOf(monthStr);
+            if (monthIndex === -1) return false;
+            
+            // Получаем номер месяца (0-11)
+            const month = Math.floor(monthIndex / 2) + 1;
+            
+            const year = parseInt(parts[2], 10);
+            if (isNaN(year) || year < 0) return false;
+            
+            return isValidDayMonthYear(day, month, year);
+        }
+        
+        function checkFormatEnglish(dateStr) 
+		{
+            const parts = dateStr.split(' ');
+            if (parts.length !== 3) return false;
+            
+            const monthStr = parts[0].toLowerCase();
+            const monthIndex = englishMonths.indexOf(monthStr);
+            if (monthIndex === -1 || monthIndex >= 12) return false;
+            
+            // Получаем номер месяца (1-12)
+            const month = monthIndex + 1;
+            
+            let dayStr = parts[1];
+            if (dayStr.endsWith(',')) 
+			{
+                dayStr = dayStr.slice(0, -1);
+            }
+            const day = parseInt(dayStr, 10);
+            if (isNaN(day)) return false;
+            
+            const year = parseInt(parts[2], 10);
+            if (isNaN(year) || year < 0) return false;
+            
+            return isValidDayMonthYear(day, month, year);
+        }
+        
+        function checkFormatEnglishWithComma(dateStr)
+		{
+            const parts = dateStr.split(' ');
+            if (parts.length !== 3 || !parts[1].endsWith(',')) return false;
+            
+            return checkFormatEnglish(dateStr);
+        }
+        
+        function checkFormatEnglishShortWithComma(dateStr) 
+		{
+            const parts = dateStr.split(' ');
+            if (parts.length !== 3 || !parts[1].endsWith(',')) return false;
+            
+            const monthStr = parts[0].toLowerCase();
+            const monthIndex = englishMonths.indexOf(monthStr);
+            if (monthIndex === -1 || monthIndex < 12) return false;
+            
+            // Получаем номер месяца (1-12)
+            const month = monthIndex - 11;
+            
+            let dayStr = parts[1];
+            if (dayStr.endsWith(',')) {
+                dayStr = dayStr.slice(0, -1);
+            }
+            const day = parseInt(dayStr, 10);
+            if (isNaN(day)) return false;
+            
+            const year = parseInt(parts[2], 10);
+            if (isNaN(year) || year < 0) return false;
+            
+            return isValidDayMonthYear(day, month, year);
+        }
+        
+        function checkFormatEnglishYearFirst(dateStr) 
+		{
+            if (!dateStr.includes(',')) return false;
+            
+            const parts = dateStr.split(',');
+            if (parts.length !== 2) return false;
+            
+            const year = parseInt(parts[0].trim(), 10);
+            if (isNaN(year) || year < 0) return false;
+            
+            const monthDayParts = parts[1].trim().split(' ');
+            if (monthDayParts.length !== 2) return false;
+            
+            const monthStr = monthDayParts[0].toLowerCase();
+            const monthIndex = englishMonths.indexOf(monthStr);
+            if (monthIndex === -1 || monthIndex >= 12) return false;
+            
+            // Получаем номер месяца (1-12)
+            const month = monthIndex + 1;
+            
+            const day = parseInt(monthDayParts[1], 10);
+            if (isNaN(day)) return false;
+            
+            return isValidDayMonthYear(day, month, year);
+        }
+        
+        function checkFormatEnglishShortYearFirst(dateStr)
+		{
+            if (!dateStr.includes(',')) return false;
+            
+            const parts = dateStr.split(',');
+            if (parts.length !== 2) return false;
+            
+            const year = parseInt(parts[0].trim(), 10);
+            if (isNaN(year) || year < 0) return false;
+            
+            const monthDayParts = parts[1].trim().split(' ');
+            if (monthDayParts.length !== 2) return false;
+            
+            const monthStr = monthDayParts[0].toLowerCase();
+            const monthIndex = englishMonths.indexOf(monthStr);
+            if (monthIndex === -1 || monthIndex < 12) return false;
+            
+            // Получаем номер месяца (1-12)
+            const month = monthIndex - 11;
+            
+            const day = parseInt(monthDayParts[1], 10);
+            if (isNaN(day)) return false;
+            
+            return isValidDayMonthYear(day, month, year);
+        }
+        
+        function isValidDayMonthYear(day, month, year) 
+		{
+            // Проверяем допустимые значения месяца
+            if (month < 1 || month > 12) return false;
+            
+            // Проверяем допустимые значения дня
+            const daysInMonth = getDaysInMonth(month, year);
+            if (day < 1 || day > daysInMonth) return false;
+            
+            return true;
+        }
+        
+        function getDaysInMonth(month, year)
+		{
+            // Проверяем февраль с учетом високосного года
+            if (month === 2) 
+			{
+                return isLeapYear(year) ? 29 : 28;
+            }
+            
+            // Месяцы с 31 днем
+            if ([1, 3, 5, 7, 8, 10, 12].includes(month)) 
+			{
+                return 31;
+            }
+            
+            // Все остальные месяцы имеют 30 дней
+            return 30;
+        }
+        
+        function isLeapYear(year)
+		{
+            if (year % 4 !== 0) return false;
+            if (year % 100 !== 0) return true;
+            return year % 400 === 0;
+        }
+    </script>
+</body>
+</html>
